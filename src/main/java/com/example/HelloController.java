@@ -1,8 +1,12 @@
 package com.example;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+import org.apache.commons.io.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by Andrew Shubin on 10/19/16.
@@ -22,5 +26,34 @@ public class HelloController {
         return "Hello " + name;
     }
 
+    @RequestMapping(value="/getHighestGreeting", method= RequestMethod.POST)
+    public Greeting getHighestGreeting(@RequestBody List<Greeting> list) {
+        Greeting highestGreeting = new Greeting(0, "");
+        for (Greeting greet : list) {
+            if (greet.getId() >= highestGreeting.getId()) {
+                highestGreeting = greet;
+            }
+        }
+        return highestGreeting;
+    }
+
+    @RequestMapping(value = "/updateGreeting", method = RequestMethod.PUT)
+    public Greeting updateGreeting(@RequestBody String newMessage) throws IOException {
+        // ObjectMapper provides functionality for reading and writing JSON
+        ObjectMapper mapper = new ObjectMapper();
+
+        String message = FileUtils.readFileToString(new File("./message.txt"));
+
+        // Deserialize JSON to greeting object
+        Greeting greeting = mapper.readValue(message, Greeting.class);
+
+        // Update message
+        greeting.setContent(newMessage);
+
+        // Serialize greeting object to JSON
+        mapper.writeValue(new File("message.txt"), greeting);
+
+        return greeting;
+    }
 
 }
